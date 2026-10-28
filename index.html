@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#f4f3e9"><title>Block Island Sprite Studio｜試作 v0.1</title>
+<html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#f4f3e9"><title>Block Island Sprite Studio｜試作 v0.2</title>
 <style>
 :root{font-family:-apple-system,BlinkMacSystemFont,"Hiragino Kaku Gothic ProN","Yu Gothic",system-ui,sans-serif;color:#1d423e;background:#f4f3e9}
 *{box-sizing:border-box}body{margin:0;padding:0 0 35px}button,input,select{font:inherit}button{cursor:pointer}button:focus-visible,input:focus-visible{outline:3px solid #f4c86a}
@@ -24,25 +24,49 @@ canvas{max-width:100%;height:auto;display:block;touch-action:manipulation;border
 .actions{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px}.primary,.secondary{border:0;border-radius:10px;padding:12px 8px;font-size:12px;font-weight:850}.primary{background:#2d695b;color:#fff}.secondary{background:#dfeae2;color:#255f53}.danger{color:#a34e35}
 footer{font-size:11px;color:#55766a;line-height:1.7;margin-top:16px;text-align:center}
 .status{font-size:11px;color:#527063;min-height:1.2em;margin-top:8px}
+
+/* v0.2: keep the live board and three controls visible together on narrow screens. */
+.previewHeading,.quickHeading{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.previewHeading h2{margin:0}
+.previewToggle,.resetMini{border:1px solid #adcbbc;background:#eaf5ed;color:#275d51;border-radius:9px;padding:6px 10px;font-size:11px;font-weight:800;white-space:nowrap}
+.quickGroup{margin-top:10px}
+.quickGroup .quickHeading h3{margin:0}
+@media(max-width:730px){
+ main{padding:10px 10px 30px}
+ .intro{margin-bottom:10px}
+ .columns{gap:12px}
+ .previewPanel{order:0;position:sticky;top:0;z-index:40;padding:8px 10px 10px;box-shadow:0 6px 22px #234b4040;border-color:#9cc8b0}
+ .controlPanel{order:1}
+ .previewHeading h2{font-size:13px}
+ .canvasWrap{padding:3px;border-radius:10px;margin-top:6px}
+ #board{width:min(100%,226px)}
+ .quickGroup{margin-top:6px;padding:6px 10px;border-radius:9px;background:#f6faf5}
+ .quickGroup .slide{margin:3px 0}
+ .quickGroup .slide label{font-size:11px;line-height:1.2}
+ .quickGroup .slide input{display:block;min-height:23px;margin:1px 0 0}
+ .quickGroup .quickHeading h3{font-size:11px}
+ .previewPanel.is-expanded{position:relative;top:auto}
+ .previewPanel.is-expanded #board{width:min(100%,360px)}
+}
+@media(max-width:730px) and (max-height:680px){#board{width:min(100%,185px)} .quickGroup{padding:3px 7px}}
 </style></head>
-<body><header><div class="title">🏝️ Block Island Sprite Studio <span style="font-size:12px;color:#d8e7c9">v0.1</span></div><div class="subtitle">施設グラフィックを「完成してから縮小」ではなく、実際の盤面で見ながら調整するための試作ツール</div></header>
+<body><header><div class="title">🏝️ Block Island Sprite Studio <span style="font-size:12px;color:#d8e7c9">v0.2</span></div><div class="subtitle">施設グラフィックを「完成してから縮小」ではなく、実際の盤面で見ながら調整するための試作ツール</div></header>
 <main><p class="intro"><span class="badge">iPhone対応・オフライン動作</span> 画像を選び、枠の形と表示位置・大きさを変えると、その場で6×6盤面に反映されます。<strong>盤面をタップすると配置場所も変更できます。</strong></p>
 <div class="columns">
-<section class="panel previewPanel"><h2>① 実際の盤面サイズで確認</h2><div class="canvasWrap"><canvas id="board" width="720" height="720" aria-label="6×6の盤面。タップすると施設の配置場所を変更できます"></canvas></div>
-<div class="previewStats"><div class="metric"><small>枠内の描画占有率（概算）</small><strong id="fillStat">—</strong><small>共通試作目標：55～65%</small></div><div class="metric"><small>枠から上へのはみ出し</small><strong id="overStat">—</strong><small>画像全体のはみ出し（建物のみの判定ではありません）</small></div></div>
-<div class="legend">🟨黄色の外枠＝2マスの敷地範囲（確認用）／🟩緑の点線＝マス境界。黄色い枠と境界線は書き出し画像には含まれません。上方向は盤面外にも表示できる設計を検討中のため、試作では上余白を描画します。</div>
-<div class="actions"><button class="primary" id="saveBoard">🖼️ 盤面画像を保存</button><button class="secondary" id="saveJSON">🧾 設定を保存</button></div><div id="status" class="status" role="status"></div></section>
-<section class="panel controlPanel"><h2>② 施設画像・配置を調整</h2><div class="controls">
+<section class="panel previewPanel"><div class="previewHeading"><h2>① 盤面を見ながら調整</h2><button type="button" class="previewToggle" id="previewToggle" aria-pressed="false">⤢ 盤面を拡大</button></div><div class="canvasWrap"><canvas id="board" width="720" height="720" aria-label="6×6の盤面。タップすると施設の配置場所を変更できます"></canvas></div>
+<div class="group quickGroup"><div class="quickHeading"><h3>スライダーで調整</h3><button class="resetMini" id="reset" type="button">↺ 初期化</button></div>
+<div class="slide"><label for="size">拡大・縮小 <output id="sizeVal">100%</output></label><input id="size" type="range" min="55" max="155" step="1" value="100"></div>
+<div class="slide"><label for="moveX">左右位置 <output id="moveXVal">0 px</output></label><input id="moveX" type="range" min="-50" max="50" step="1" value="0"></div>
+<div class="slide"><label for="moveY">上下位置 <output id="moveYVal">0 px</output></label><input id="moveY" type="range" min="-75" max="45" step="1" value="0"></div></div></section>
+<section class="panel controlPanel"><h2>② 画像とマス枠を選択</h2><div class="controls">
 <div class="group"><h3>画像を選ぶ</h3><div class="selectRow"><button class="assetBtn" data-asset="lv3">Lv3<br>集落</button><button class="assetBtn" data-asset="current">α7.24<br>旧Final</button><button class="assetBtn active" data-asset="new">横2マス<br>新案（参考）</button></div><label class="fileLabel">＋ 自分のPNG・WebP画像を読み込む<input id="upload" type="file" accept="image/png,image/webp,image/jpeg"></label><div id="assetName" class="status">参考新案を表示中（α7.25 TEST-02の画像と完全一致するものではありません）</div></div>
 <div class="group"><h3>施設の占有マス</h3><div class="seg"><button data-shape="1" aria-pressed="false">1マス</button><button data-shape="h" aria-pressed="true">横2</button><button data-shape="v" aria-pressed="false">縦2</button><button data-shape="4" aria-pressed="false">4マス</button></div>
 <label class="switch"><input id="showLv3" type="checkbox" checked> Lv3「集落」を盤面に一緒に置いて比較</label>
 <label class="switch"><input id="showGuides" type="checkbox" checked> 配置ガイド・選択枠を表示</label></div>
-<div class="group"><h3>見え方を調整</h3>
-<div class="slide"><label for="size">拡大・縮小 <output id="sizeVal">100%</output></label><input id="size" type="range" min="55" max="155" step="1" value="100"></div>
-<div class="slide"><label for="moveX">左右位置 <output id="moveXVal">0 px</output></label><input id="moveX" type="range" min="-50" max="50" step="1" value="0"></div>
-<div class="slide"><label for="moveY">上下位置 <output id="moveYVal">0 px</output></label><input id="moveY" type="range" min="-75" max="45" step="1" value="0"></div>
-<button class="secondary" id="reset" style="width:100%">表示設定を初期化</button></div>
-</div><div class="note"><strong>この試作でできること：</strong>画像の読み込み、位置・倍率の調整、横2/縦2/4マスの確認、Lv3との実寸比較、盤面PNGの保存。<br><strong>まだできないこと：</strong>1枚絵の中で「屋根だけ拡大」「土台だけ丸める」加工。これには建物・土台を別レイヤーに分ける機能が必要です。</div></section></div>
+</div><div class="note"><strong>この試作でできること：</strong>画像の読み込み、位置・倍率の調整、横2/縦2/4マスの確認、Lv3との実寸比較、盤面PNGの保存。<br><strong>まだできないこと：</strong>1枚絵の中で「屋根だけ拡大」「土台だけ丸める」加工。これには建物・土台を別レイヤーに分ける機能が必要です。</div>
+<div class="previewStats"><div class="metric"><small>枠内の描画占有率（概算）</small><strong id="fillStat">—</strong><small>共通試作目標：55～65%</small></div><div class="metric"><small>枠から上へのはみ出し</small><strong id="overStat">—</strong><small>画像全体のはみ出し（建物のみの判定ではありません）</small></div></div>
+<div class="legend">🟨黄色の外枠＝2マスの敷地範囲（確認用）／🟩緑の点線＝マス境界。黄色い枠と境界線は書き出し画像には含まれません。上方向は盤面外にも表示できる設計を検討中のため、試作では上余白を描画します。</div>
+<div class="actions"><button class="primary" id="saveBoard">🖼️ 盤面画像を保存</button><button class="secondary" id="saveJSON">🧾 設定を保存</button></div><div id="status" class="status" role="status"></div></section></div>
 <footer>Sprite Studioはゲーム本体と独立した試作ツールです。画像の処理はブラウザ内で完結し、外部サーバーにアップロードしません。画像原本・ゲーム本体は変更しません。</footer>
 </main><script>
 'use strict';
@@ -92,6 +116,8 @@ document.getElementById('showLv3').addEventListener('change',e=>{state.showLv3=e
 document.getElementById('reset').addEventListener('click',()=>{state.scale=1;state.x=0;state.y=0;controls.size.value='100';controls.x.value='0';controls.y.value='0';updateUI();schedule()});
 canvas.addEventListener('click',e=>{const r=canvas.getBoundingClientRect();const tile=r.width/6;let col=Math.floor((e.clientX-r.left)/tile),row=Math.floor((e.clientY-r.top-r.width*.065)/tile);const [cw,ch]=dimensions();state.col=Math.min(6-cw,Math.max(0,col));state.row=Math.min(6-ch,Math.max(0,row));schedule()});
 document.getElementById('saveBoard').addEventListener('click',()=>{const cw=720,off=document.createElement('canvas');off.width=cw;off.height=cw+Math.round(cw*.065);scene(off.getContext('2d'),cw,true);off.toBlob(b=>saveBlob(b,'BI_sprite_board_preview.png'),'image/png')});
-document.getElementById('saveJSON').addEventListener('click',()=>saveBlob(new Blob([JSON.stringify({app:'Block Island Sprite Studio',version:'0.1',asset:state.asset,shape:state.shape,col:state.col,row:state.row,scale:state.scale,offsetX:state.x,offsetY:state.y,unit:'CSS px at board width 360px',date:new Date().toISOString()},null,2)],{type:'application/json'}),'BI_sprite_layout.json'));
+document.getElementById('saveJSON').addEventListener('click',()=>saveBlob(new Blob([JSON.stringify({app:'Block Island Sprite Studio',version:'0.2',asset:state.asset,shape:state.shape,col:state.col,row:state.row,scale:state.scale,offsetX:state.x,offsetY:state.y,unit:'CSS px at board width 360px',date:new Date().toISOString()},null,2)],{type:'application/json'}),'BI_sprite_layout.json'));
+
+document.getElementById('previewToggle').addEventListener('click',()=>{const p=document.querySelector('.previewPanel');const large=p.classList.toggle('is-expanded');const toggle=document.getElementById('previewToggle');toggle.setAttribute('aria-pressed',large?'true':'false');toggle.textContent=large?'▣ コンパクトに戻す':'⤢ 盤面を拡大';schedule();if(large)requestAnimationFrame(()=>p.scrollIntoView({behavior:'smooth',block:'start'}))});
 window.addEventListener('resize',schedule);loadAsset('lv3').then(im=>{state.lv3=im;loadSelected('new')});
 </script></body></html>
