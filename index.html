@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#f4f3e9"><title>Block Island Sprite Studio｜試作 v0.4.1</title>
+<html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#f4f3e9"><title>Block Island Sprite Studio｜試作 v0.4.2</title>
 <style>
 :root{--bg:#f4f3e9;--paper:#fffef9;--ink:#1d423e;--sub:#527063;--line:#cfe0d4;--green:#2d695b;--green2:#3b776c;--sea:#77c4d2;--sea2:#62bfd8;--tile:#b5d59b;--tile2:#a9cd8b;--panel:#f7faf6;--accent:#f6c66b}
 *{box-sizing:border-box}html,body{margin:0;padding:0;background:var(--bg);color:var(--ink);font-family:-apple-system,BlinkMacSystemFont,"Hiragino Kaku Gothic ProN","Yu Gothic",system-ui,sans-serif}button,input,select{font:inherit}button{cursor:pointer}button:focus-visible,input:focus-visible{outline:3px solid #f4c86a}
@@ -10,6 +10,11 @@ main{max-width:1040px;margin:0 auto;padding:14px 12px 34px}.badge{display:inline
 .panel{background:var(--paper);border:1px solid #dce6d9;border-radius:18px;padding:14px;box-shadow:0 6px 19px #29574d12}.panel h2{font-size:15px;margin:0 0 12px}
 .previewPanel{position:sticky;top:8px;z-index:10}@media(max-width:820px){.previewPanel{position:static}}
 .previewTop{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:8px}.previewTop h2{margin:0}
+.previewSwitchRow{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin:0 0 10px}
+.previewSwitchBtn{min-width:0;min-height:42px;padding:7px 10px;border:1.5px solid #accbbd;border-radius:12px;background:#e7f0ea;color:#2b6052;font:inherit;font-size:13px;font-weight:800;cursor:pointer}
+.previewSwitchBtn.is-active{background:#2b695c;color:#fff;border-color:#2b695c}
+.previewSwitchBtn:focus-visible{outline:3px solid #e0b84d;outline-offset:2px}
+@media(max-width:390px){.previewSwitchRow{gap:6px;margin-bottom:8px}.previewSwitchBtn{min-height:40px;font-size:12px}}
 .btnMini{border:1px solid #adcbbc;background:#eaf5ed;color:#275d51;border-radius:10px;padding:8px 10px;font-size:12px;font-weight:800;white-space:nowrap}
 .canvasWrap{background:linear-gradient(150deg,#f3f0df,#e3f0e4);border-radius:14px;position:relative;padding:8px;overflow:hidden}canvas{display:block;max-width:100%;height:auto;border-radius:12px;touch-action:manipulation}#board{width:min(100%,460px);margin:0 auto;cursor:crosshair}
 .quickGroup{margin-top:10px;padding:12px;border-radius:14px;background:#f7faf6;border:1px solid #e4eee3}.quickHeading{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:8px}.quickHeading h3{margin:0;font-size:14px}
@@ -28,11 +33,15 @@ main{max-width:1040px;margin:0 auto;padding:14px 12px 34px}.badge{display:inline
 footer{font-size:11px;color:#55766a;line-height:1.7;margin-top:16px;text-align:center}
 @media(max-width:820px){main{padding:10px 10px 26px} .previewPanel{box-shadow:0 6px 22px #234b4040} .canvasWrap{padding:6px} #board{width:min(100%,360px)} }
 </style></head>
-<body><header><div class="headWrap"><div class="title">🏝️ Block Island Sprite Studio <span style="font-size:12px;color:#d8e7c9">v0.4.1</span></div><div class="subtitle">施設グラフィックを「完成してから縮小」ではなく、<strong>Block Islandっぽい実盤面に近い見え方</strong>で確認するための試作ツール</div></div></header>
+<body><header><div class="headWrap"><div class="title">🏝️ Block Island Sprite Studio <span style="font-size:12px;color:#d8e7c9">v0.4.2</span></div><div class="subtitle">施設グラフィックを「完成してから縮小」ではなく、<strong>Block Islandっぽい実盤面に近い見え方</strong>で確認するための試作ツール</div></div></header>
 <main><p class="intro"><span class="badge">iPhone対応・オフライン動作</span> 画像を選び、形・大きさ・位置を調整すると、その場で盤面へ反映されます。<strong>盤面タップで配置変更、プリセットで上端・中央・下端チェック</strong>ができます。</p>
 <div class="layout">
 <section class="panel previewPanel">
 <div class="previewTop"><h2>① 盤面を見ながら調整</h2><button type="button" class="btnMini" id="previewToggle" aria-pressed="false">⤢ 盤面を拡大</button></div>
+<div class="previewSwitchRow" role="group" aria-label="盤面で表示する比較案">
+<button type="button" class="previewSwitchBtn is-active" id="quickA" aria-pressed="true">A案 · 読み込み中</button>
+<button type="button" class="previewSwitchBtn" id="quickB" aria-pressed="false">B案 · 未設定</button>
+</div>
 <div class="canvasWrap"><canvas id="board" width="840" height="760" aria-label="Block Island風6×6盤面。タップで施設配置を変更できます"></canvas></div>
 <div class="quickGroup">
 <div class="quickHeading"><h3>リアルタイム調整</h3><button class="btnMini" id="reset" type="button">↺ 初期化</button></div>
@@ -202,8 +211,8 @@ function capture(){return {asset:state.asset,assetName:state.assetName,image:sta
 function stash(){if(state.image)variants[active]=capture();}
 function applyVariant(v){Object.assign(state,v);controls.size.value=state.scale*100;controls.x.value=state.x;controls.y.value=state.y;updateUI();}
 function pick(k){stash();if(!variants[k])variants[k]={...variants[active]};active=k;applyVariant(variants[k]);schedule();}
-function renderAB(){stash();const original=capture();for(const k of ['A','B']){const v=variants[k];const c=$('mini'+k);c.width=210;c.height=223; if(v){Object.assign(state,v);scene(c.getContext('2d'),210,false);} $('pick'+k).textContent=k+'案'+(active===k?'（編集中）':'');}Object.assign(state,original);}
-$('pickA').onclick=()=>pick('A');$('pickB').onclick=()=>pick('B');
+function renderAB(){stash();const original=capture();for(const k of ['A','B']){const v=variants[k];const c=$('mini'+k);c.width=210;c.height=223; if(v){Object.assign(state,v);scene(c.getContext('2d'),210,false);} $('pick'+k).textContent=k+'案'+(active===k?'（編集中）':'');const q=$('quick'+k);q.textContent=k+'案 · '+(v?Math.round(v.scale*100)+'%':'未設定');q.classList.toggle('is-active',active===k);q.setAttribute('aria-pressed',active===k?'true':'false');}Object.assign(state,original);}
+$('pickA').onclick=()=>pick('A');$('pickB').onclick=()=>pick('B');$('quickA').onclick=()=>pick('A');$('quickB').onclick=()=>pick('B');
 $('copyImage').onclick=()=>{stash();variants[active==='A'?'B':'A']={...variants[active]};schedule();};
 $('syncAdjust').onclick=()=>{stash();const other=active==='A'?'B':'A';if(!variants[other])variants[other]={...variants[active]};Object.assign(variants[other],{scale:state.scale,x:state.x,y:state.y});schedule();};
 async function restoreAB(d){
