@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#f4f3e9"><title>Block Island Sprite Studio｜試作 v0.4</title>
+<html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#f4f3e9"><title>Block Island Sprite Studio｜試作 v0.4.1</title>
 <style>
 :root{--bg:#f4f3e9;--paper:#fffef9;--ink:#1d423e;--sub:#527063;--line:#cfe0d4;--green:#2d695b;--green2:#3b776c;--sea:#77c4d2;--sea2:#62bfd8;--tile:#b5d59b;--tile2:#a9cd8b;--panel:#f7faf6;--accent:#f6c66b}
 *{box-sizing:border-box}html,body{margin:0;padding:0;background:var(--bg);color:var(--ink);font-family:-apple-system,BlinkMacSystemFont,"Hiragino Kaku Gothic ProN","Yu Gothic",system-ui,sans-serif}button,input,select{font:inherit}button{cursor:pointer}button:focus-visible,input:focus-visible{outline:3px solid #f4c86a}
@@ -28,7 +28,7 @@ main{max-width:1040px;margin:0 auto;padding:14px 12px 34px}.badge{display:inline
 footer{font-size:11px;color:#55766a;line-height:1.7;margin-top:16px;text-align:center}
 @media(max-width:820px){main{padding:10px 10px 26px} .previewPanel{box-shadow:0 6px 22px #234b4040} .canvasWrap{padding:6px} #board{width:min(100%,360px)} }
 </style></head>
-<body><header><div class="headWrap"><div class="title">🏝️ Block Island Sprite Studio <span style="font-size:12px;color:#d8e7c9">v0.4</span></div><div class="subtitle">施設グラフィックを「完成してから縮小」ではなく、<strong>Block Islandっぽい実盤面に近い見え方</strong>で確認するための試作ツール</div></div></header>
+<body><header><div class="headWrap"><div class="title">🏝️ Block Island Sprite Studio <span style="font-size:12px;color:#d8e7c9">v0.4.1</span></div><div class="subtitle">施設グラフィックを「完成してから縮小」ではなく、<strong>Block Islandっぽい実盤面に近い見え方</strong>で確認するための試作ツール</div></div></header>
 <main><p class="intro"><span class="badge">iPhone対応・オフライン動作</span> 画像を選び、形・大きさ・位置を調整すると、その場で盤面へ反映されます。<strong>盤面タップで配置変更、プリセットで上端・中央・下端チェック</strong>ができます。</p>
 <div class="layout">
 <section class="panel previewPanel">
@@ -48,7 +48,7 @@ footer{font-size:11px;color:#55766a;line-height:1.7;margin-top:16px;text-align:c
 <button type="button" class="presetBtn" data-preset="bottomRight">右下</button>
 </div>
 </div>
-<div class="cols2" style="margin-top:10px"><div class="metric"><small>枠内の描画占有率（概算）</small><strong id="fillStat">—</strong><small>2マスFinalの目安：55～68%</small></div><div class="metric"><small>枠から上へのはみ出し</small><strong id="overStat">—</strong><small>盤面上端見切れの事前確認用</small></div></div>
+<div class="group" style="margin-top:10px"><h3>A/B比較</h3><input id="candidateName" placeholder="候補名" aria-label="候補名" style="width:100%"><div class="actions"><button id="pickA" class="primary">A案</button><button id="pickB" class="secondary">B案</button></div><div style="display:flex;gap:8px"><canvas id="miniA" style="width:48%"></canvas><canvas id="miniB" style="width:48%"></canvas></div><label class="switch"><input id="keepAdjust" type="checkbox" checked>画像変更時に倍率・位置を引き継ぐ</label><div class="actions"><button id="copyImage" class="secondary">画像と調整を他方へコピー</button><button id="syncAdjust" class="secondary">調整値だけ他方へコピー</button></div><p class="legend">選択中の案に画像を読み込みます。占有マス・盤面位置はA/B共通。位置は基準盤面420pxでの値です。</p></div><div class="cols2" style="margin-top:10px"><div class="metric"><small>枠内の描画占有率（概算）</small><strong id="fillStat">—</strong><small>2マスFinalの目安：55～68%</small></div><div class="metric"><small>枠から上へのはみ出し</small><strong id="overStat">—</strong><small>盤面上端見切れの事前確認用</small></div></div>
 <div class="legend">🟨黄色枠＝施設の占有マス / 🟩点線＝マス境界 / 🟦水色枠＝盤面フレーム。<strong>上部余白をあえて描画</strong>して、塔・屋根の見切れを確認しやすくしています。</div>
 </section>
 <section class="panel controlPanel"><h2>② 画像とルールを選択</h2>
@@ -88,7 +88,7 @@ function dimensions(){return state.shape==='h'?[2,1]:state.shape==='v'?[1,2]:sta
 function loadAsset(key){if(loaded[key])return Promise.resolve(loaded[key]);return new Promise((resolve,reject)=>{const im=new Image();im.onload=()=>{loaded[key]=im;resolve(im)};im.onerror=reject;im.src=ASSETS[key]})}
 function updateUI(){document.querySelectorAll('[data-asset]').forEach(b=>b.classList.toggle('active',b.dataset.asset===state.asset));document.querySelectorAll('[data-shape]').forEach(b=>b.setAttribute('aria-pressed',b.dataset.shape===state.shape?'true':'false'));document.getElementById('assetName').textContent=state.assetName;document.getElementById('sizeVal').textContent=Math.round(state.scale*100)+'%';document.getElementById('moveXVal').textContent=state.x+' px';document.getElementById('moveYVal').textContent=state.y+' px';}
 function schedule(){if(renderQueued)return;renderQueued=true;requestAnimationFrame(()=>{renderQueued=false;render()})}
-function loadSelected(key,custom){state.asset=key;state.assetName=custom||({lv3:'Lv3「集落」',current:'α7.24旧Final（ゲーム内画像）',new:'横2マス新案（参考）'}[key]);const p=key==='custom'?Promise.resolve(loaded.custom):loadAsset(key);p.then(im=>{state.image=im;state.scale=1;state.x=0;state.y=0;controls.size.value='100';controls.x.value='0';controls.y.value='0';if(key==='lv3')state.shape='1';else if(state.shape==='1')state.shape='h';applyPreset('topCenter',false);updateUI();schedule()}).catch(()=>document.getElementById('status').textContent='画像を読み込めませんでした')}
+function loadSelected(key,custom){state.asset=key;state.assetName=custom||({lv3:'Lv3「集落」',current:'α7.24旧Final（ゲーム内画像）',new:'横2マス新案（参考）'}[key]);const p=key==='custom'?Promise.resolve(loaded.custom):loadAsset(key);p.then(im=>{state.image=im;if(!$('keepAdjust').checked){state.scale=1;state.x=0;state.y=0;}controls.size.value=state.scale*100;controls.x.value=state.x;controls.y.value=state.y;updateUI();schedule()}).catch(()=>document.getElementById('status').textContent='画像を読み込めませんでした')}
 function drawImageContained(target,im,rc,scale=1,dx=0,dy=0){if(!im?.naturalWidth)return null;const ratio=Math.min(rc.w/im.naturalWidth,rc.h/im.naturalHeight);const w=im.naturalWidth*ratio*scale,h=im.naturalHeight*ratio*scale;const x=rc.x+(rc.w-w)/2+dx,y=rc.y+(rc.h-h)/2+dy;target.drawImage(im,x,y,w,h);return {x,y,w,h}}
 function roundedRect(target,x,y,w,h,r,fill,stroke){target.beginPath();target.moveTo(x+r,y);target.arcTo(x+w,y,x+w,y+h,r);target.arcTo(x+w,y+h,x,y+h,r);target.arcTo(x,y+h,x,y,r);target.arcTo(x,y,x+w,y,r);if(fill){target.fillStyle=fill;target.fill()}if(stroke){target.strokeStyle=stroke;target.stroke()}}
 function scene(context,baseW,exportClean=false){
@@ -111,12 +111,12 @@ function scene(context,baseW,exportClean=false){
  }
  if(state.showLv3&&state.asset!=='lv3'&&loaded.lv3) drawImageContained(context,loaded.lv3,{x:boardX+tile*.92,y:boardY+tile*2.05,w:tile,h:tile},.96);
  const [cw,ch]=dimensions(); const dest={x:boardX+state.col*tile,y:boardY+state.row*tile,w:cw*tile,h:ch*tile}; let imageBounds=null;
- if(state.image){const pad=Math.min(dest.w,dest.h)*.04; imageBounds=drawImageContained(context,state.image,{x:dest.x+pad,y:dest.y+pad,w:dest.w-2*pad,h:dest.h-2*pad},state.scale,state.x,state.y)}
+ if(state.image){const pad=Math.min(dest.w,dest.h)*.04; imageBounds=drawImageContained(context,state.image,{x:dest.x+pad,y:dest.y+pad,w:dest.w-2*pad,h:dest.h-2*pad},state.scale,state.x*baseW/420,state.y*baseW/420)}
  if(state.showGuides&&!exportClean){context.strokeStyle='#f6c66b';context.lineWidth=2.5;context.strokeRect(dest.x+1.7,dest.y+1.7,dest.w-3.4,dest.h-3.4);context.fillStyle='#e8b155';context.beginPath();context.arc(dest.x+dest.w-12,dest.y+dest.h-12,5,0,Math.PI*2);context.fill()}
  return {dest,imageBounds,unit:tile,totalH,boardRect:{x:boardX,y:boardY,w:boardW,h:boardH}};
 }
 function metrics(){if(!state.image)return;const sampleW=420, tm=document.createElement('canvas'); const meta=scene(tm.getContext('2d',{willReadFrequently:true}),sampleW,true), d=meta.dest; const tmp=document.createElement('canvas'); tmp.width=sampleW; tmp.height=Math.ceil(meta.totalH); const t=tmp.getContext('2d',{willReadFrequently:true}); const pad=Math.min(d.w,d.h)*.04; drawImageContained(t,state.image,{x:d.x+pad,y:d.y+pad,w:d.w-2*pad,h:d.h-2*pad},state.scale,state.x,state.y); const arr=t.getImageData(0,0,tmp.width,tmp.height).data; let filled=0,topPixels=0,total=0; const left=Math.max(0,Math.floor(d.x)), right=Math.min(sampleW,Math.ceil(d.x+d.w)), top=Math.max(0,Math.floor(d.y)), bottom=Math.min(tmp.height,Math.ceil(d.y+d.h)); for(let y=0;y<tmp.height;y++)for(let x=0;x<tmp.width;x++){const a=arr[(y*tmp.width+x)*4+3]/255;if(!a)continue;total+=a;if(x>=left&&x<right&&y>=top&&y<bottom)filled+=a;if(y<d.y)topPixels+=a;} const rate=filled/(d.w*d.h)*100; const outPercent=total?topPixels/total*100:0; document.getElementById('fillStat').textContent=rate.toFixed(1)+'%'; document.getElementById('overStat').textContent=outPercent.toFixed(1)+'%';}
-function render(){const cssW=Math.min(canvas.parentElement.getBoundingClientRect().width-8, document.querySelector('.previewPanel').classList.contains('is-expanded')?520:460); const dpr=Math.min(window.devicePixelRatio||1,2); const meta=scene(document.createElement('canvas').getContext('2d'),cssW,true); canvas.width=Math.round(cssW*dpr); canvas.height=Math.round(meta.totalH*dpr); canvas.style.height=meta.totalH+'px'; ctx.setTransform(dpr,0,0,dpr,0,0); scene(ctx,cssW,false); metrics();}
+function render(){const cssW=Math.min(canvas.parentElement.getBoundingClientRect().width-8, document.querySelector('.previewPanel').classList.contains('is-expanded')?520:460); const dpr=Math.min(window.devicePixelRatio||1,2); const meta=scene(document.createElement('canvas').getContext('2d'),cssW,true); canvas.width=Math.round(cssW*dpr); canvas.height=Math.round(meta.totalH*dpr); canvas.style.height=meta.totalH+'px'; ctx.setTransform(dpr,0,0,dpr,0,0); scene(ctx,cssW,false); metrics(); renderAB();}
 function saveBlob(b,name){if(!b){document.getElementById('status').textContent='保存できませんでした';return}const a=document.createElement('a'); const url=URL.createObjectURL(b); a.href=url; a.download=name; document.body.appendChild(a); a.click(); a.remove(); setTimeout(()=>URL.revokeObjectURL(url),4000); document.getElementById('status').textContent='保存しました。iPhoneでは「ファイル」アプリ内も確認してください。';}
 function applyPreset(name,renderNow=true){const [cw,ch]=dimensions(); const map={topCenter:[Math.floor((6-cw)/2),0],center:[Math.floor((6-cw)/2),Math.floor((6-ch)/2)],bottomCenter:[Math.floor((6-cw)/2),6-ch],topLeft:[0,0],topRight:[6-cw,0],bottomRight:[6-cw,6-ch]}; const p=map[name]||map.topCenter; state.col=p[0]; state.row=p[1]; if(renderNow)schedule();}
 
@@ -139,17 +139,17 @@ const $=id=>document.getElementById(id);
 const tell=message=>{$('studioStatus').textContent=message;};
 function jsonSave(data,name){saveBlob(new Blob([JSON.stringify(data,null,2)],{type:'application/json'}),name);}
 function layoutData(){return {app:'Block Island Sprite Studio',version:'0.4',asset:state.asset,assetName:state.assetName,shape:state.shape,col:state.col,row:state.row,scale:state.scale,offsetX:state.x,offsetY:state.y,showLv3:state.showLv3,showGuides:state.showGuides,showBoardDeco:state.showBoardDeco,date:new Date().toISOString()};}
-function exportSettings(){const data=layoutData();if(state.asset==='custom'&&$('embedImage').checked&&state.image)data.imageData=state.image.src;jsonSave(data,'BI_sprite_layout_v04.json');}
+function exportSettings(){stash();const embed=$('embedImage').checked;const data={app:'Block Island Sprite Studio',version:'0.4.1',candidateName:$('candidateName').value,active,layout:layoutData(),variants:Object.fromEntries(Object.entries(variants).map(([k,v])=>[k,v?{asset:v.asset,assetName:v.assetName,scale:v.scale,x:v.x,y:v.y,...(embed&&v.image?{imageData:v.image.src}:{})}:null]))};if(!embed)tell('画像を含めず保存します。カスタム画像は別途必要です。');jsonSave(data,'BI_sprite_comparison_v041.json');}
 function spriteOutput(){
  if(!state.image?.naturalWidth)throw Error('先に画像を読み込んでください');
- const baseW=Math.min(canvas.parentElement.getBoundingClientRect().width-8,document.querySelector('.previewPanel').classList.contains('is-expanded')?520:460);
- const [cw,ch]=dimensions(),tile=baseW*.94/6,w=cw*tile,h=ch*tile,pad=Math.min(w,h)*.04;
+ const tile=128,baseW=tile*6/.94;
+ const [cw,ch]=dimensions(),w=cw*tile,h=ch*tile,pad=Math.min(w,h)*.04;
  const probe=document.createElement('canvas').getContext('2d');
- const b=drawImageContained(probe,state.image,{x:pad,y:pad,w:w-2*pad,h:h-2*pad},state.scale,state.x,state.y);
+ const b=drawImageContained(probe,state.image,{x:pad,y:pad,w:w-2*pad,h:h-2*pad},state.scale,state.x*baseW/420,state.y*baseW/420);
  const left=Math.floor(Math.min(0,b.x))-2,top=Math.floor(Math.min(0,b.y))-2;
  const out=document.createElement('canvas');out.width=Math.ceil(Math.max(w,b.x+b.w))-left+2;out.height=Math.ceil(Math.max(h,b.y+b.h))-top+2;
  out.getContext('2d').drawImage(state.image,b.x-left,b.y-top,b.w,b.h);
- return {canvas:out,metadata:{version:'0.4',coordinateSystem:'PNG left/top, pixels, y down',basePreviewWidth:baseW,width:out.width,height:out.height,anchor:{meaning:'占有枠の左上',x:-left,y:-top},footprint:{width:w,height:h},imageBounds:{x:b.x-left,y:b.y-top,width:b.w,height:b.h},padding:2,layout:layoutData(),gamePlacementCompatibility:'未確認'}};
+ return {canvas:out,metadata:{version:'0.4.1',tilePixels:128,offsetReferenceWidth:420,coordinateSystem:'PNG left/top, pixels, y down',basePreviewWidth:baseW,width:out.width,height:out.height,anchor:{meaning:'占有枠の左上',x:-left,y:-top},footprint:{width:w,height:h},imageBounds:{x:b.x-left,y:b.y-top,width:b.w,height:b.h},padding:2,layout:layoutData(),gamePlacementCompatibility:'未確認'}};
 }
 $('exportSprite').onclick=()=>{try{spriteOutput().canvas.toBlob(b=>saveBlob(b,'BI_facility_v04.png'),'image/png');}catch(e){tell(e.message);}};
 $('exportAnchor').onclick=()=>{try{jsonSave(spriteOutput().metadata,'BI_facility_anchor_v04.json');}catch(e){tell(e.message);}};
@@ -171,7 +171,7 @@ async function restoreLayout(d){
  for(const k of ['showLv3','showGuides','showBoardDeco'])$(k).checked=state[k];updateUI();schedule();tell(d.asset==='custom'&&!d.imageData?'設定を復元しました。再選択画像が元画像と一致するか確認してください。':'画像と設定を復元しました。');
 }
 async function readJSON(file){if(!file||file.size>20*1024*1024)throw Error('JSONは20MB以下を選択してください');return JSON.parse(await file.text());}
-$('restoreJSON').onchange=async e=>{try{await restoreLayout(await readJSON(e.target.files[0]));}catch(err){tell(err.message);}finally{e.target.value='';}};
+$('restoreJSON').onchange=async e=>{try{const d=await readJSON(e.target.files[0]);if(d.version==='0.4.1')await restoreAB(d);else {await restoreLayout(d);stash();}}catch(err){tell(err.message);}finally{e.target.value='';}};
 const fields={id:'原画ID',name:'名称',evolution:'進化系',direction:'向き',acquiredDate:'生成・取得日',service:'生成サービス',model:'モデル',prompt:'プロンプト',referenceSources:'参照画像の出所（URL／ファイル／権利条件）',originalFilename:'元ファイル名',sha256:'元ファイルSHA256',history:'加工作業履歴',rightsHolder:'権利者',terms:'利用条件',commercialUse:'商用可否（未確認／可／不可／条件付き）',permissionEvidence:'許可証跡のURL又はファイル',verification:'検証ステータス',approvalDate:'承認日',version:'素材バージョン'};
 fields.category='カテゴリ';fields.adoption='採用状況';
 const statuses=['未確認','要確認','確認済'];
@@ -195,5 +195,24 @@ $('hashFile').onchange=async e=>{try{const f=e.target.files[0];if(!f)return;if(f
 $('exportLedger').onclick=()=>jsonSave({app:'BI Sprite Studio Ledger',version:'0.4',records},'BI_material_ledger_v04.json');
 $('importLedger').onchange=async e=>{try{const d=await readJSON(e.target.files[0]);if(d.app!=='BI Sprite Studio Ledger'||d.version!=='0.4')throw Error('対応する台帳ではありません');const incoming=validRecords(d.records);const merged=records.slice();for(const r of incoming){if(merged.some(x=>x.id===r.id))throw Error('既存IDと重複しています：'+r.id+'。既存記録は変更していません。');merged.push(r);}validRecords(merged);localStorage.setItem(ledgerKey,JSON.stringify(merged));records=merged;listRecords();tell('台帳を読み込みました。確認状況は記録どおり保持しています。');}catch(err){tell(err.message);}finally{e.target.value='';}};
 
+
+// v0.4.1: variants are memory-only; ledger storage is unchanged.
+let active='A';const variants={A:null,B:null};
+function capture(){return {asset:state.asset,assetName:state.assetName,image:state.image,scale:state.scale,x:state.x,y:state.y};}
+function stash(){if(state.image)variants[active]=capture();}
+function applyVariant(v){Object.assign(state,v);controls.size.value=state.scale*100;controls.x.value=state.x;controls.y.value=state.y;updateUI();}
+function pick(k){stash();if(!variants[k])variants[k]={...variants[active]};active=k;applyVariant(variants[k]);schedule();}
+function renderAB(){stash();const original=capture();for(const k of ['A','B']){const v=variants[k];const c=$('mini'+k);c.width=210;c.height=223; if(v){Object.assign(state,v);scene(c.getContext('2d'),210,false);} $('pick'+k).textContent=k+'案'+(active===k?'（編集中）':'');}Object.assign(state,original);}
+$('pickA').onclick=()=>pick('A');$('pickB').onclick=()=>pick('B');
+$('copyImage').onclick=()=>{stash();variants[active==='A'?'B':'A']={...variants[active]};schedule();};
+$('syncAdjust').onclick=()=>{stash();const other=active==='A'?'B':'A';if(!variants[other])variants[other]={...variants[active]};Object.assign(variants[other],{scale:state.scale,x:state.x,y:state.y});schedule();};
+async function restoreAB(d){
+ if(d.app!=='Block Island Sprite Studio'||!['A','B'].includes(d.active)||typeof d.candidateName!=='string')throw Error('比較設定が不正です');validateLayout(d.layout);
+ const next={};for(const k of ['A','B']){const v=d.variants?.[k];if(!v){next[k]=null;continue;}validateLayout({...d.layout,asset:v.asset,scale:v.scale,offsetX:v.x,offsetY:v.y});let image;if(v.imageData){if(!/^data:image\/(png|webp|jpeg);base64,/.test(v.imageData))throw Error('画像形式が不正です');image=await new Promise((ok,no)=>{const i=new Image();i.onload=()=>ok(i);i.onerror=()=>no(Error('画像の復元に失敗'));i.src=v.imageData;});}else if(v.asset==='custom')throw Error(k+'案の画像が含まれていません。画像入りJSONを保存してください。');else image=await loadAsset(v.asset);next[k]={asset:v.asset,assetName:v.assetName,scale:v.scale,x:v.x,y:v.y,image};}
+ if(!next[d.active])throw Error('選択案の画像がありません');
+ const l=d.layout;Object.assign(state,{shape:l.shape,col:l.col,row:l.row,showLv3:l.showLv3,showGuides:l.showGuides,showBoardDeco:l.showBoardDeco});for(const k of ['showLv3','showGuides','showBoardDeco'])$(k).checked=state[k];Object.assign(variants,next);active=d.active;$('candidateName').value=d.candidateName;applyVariant(variants[active]);schedule();tell('A/B比較を復元しました');
+}
+
 </script></body></html>
+
 
